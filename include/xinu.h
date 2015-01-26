@@ -20,3 +20,7 @@
 #include <prototypes.h>
 #include <i386.h>
 #include <pci.h>
+
+
+/* User Declared Functions */
+#include <user_functions.h>
