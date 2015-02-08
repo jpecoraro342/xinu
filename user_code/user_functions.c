@@ -72,11 +72,13 @@ void pickup_forks(int n) {
 	//kprintf("philosopher %d is waiting for the waiter to pick up forks\n", n);
 	wait(waiter);
 
-	if (philosopher_state[n] != HUNGRY) {
+	if (philosopher_state[n] == THINKING) {
 		philosopher_state[n] = HUNGRY;
 		kprintf(" philosopher %d is hungry\n", n);
 	}
 	attempt_fork_pickup(n);
+
+	//kprintf(" philosopher %d is stuck in a hungry loop\n", n);
 
 	signal(waiter);
 }
@@ -84,14 +86,15 @@ void pickup_forks(int n) {
 void put_down_forks(int n) {
 	//kprintf("philosopher %d is waiting for the waiter to put down forks\n", n);
 	wait(waiter);
-
-	philosopher_state[n] = THINKING;
-	//kprintf("philosopher %d is putting down forks %d and %d\n", n, LEFT, RIGHT);
-	signal(forks[n]);
-	signal(forks[RIGHT]);
-	kprintf(" philosopher %d put down forks %d and %d\n", n, LEFT, RIGHT);
-	attempt_fork_pickup(LEFT);
-	attempt_fork_pickup(RIGHT);
+	if (philosopher_state[n] == EATING) {
+		philosopher_state[n] = THINKING;
+		//kprintf("philosopher %d is putting down forks %d and %d\n", n, LEFT, RIGHT);
+		signal(forks[n]);
+		signal(forks[RIGHT]);
+		kprintf(" philosopher %d put down forks %d and %d\n", n, n, RIGHT);
+		attempt_fork_pickup(LEFT);
+		attempt_fork_pickup(RIGHT);
+	}
 	signal(waiter);
 }
 
@@ -110,6 +113,9 @@ void think(int n) {
 		kprintf(" philosopher %d is thinking\n", n);
 		sleepms(THINK_TIME); //thinks for think time
 		//kprintf("philosopher %d is done thinking\n", n);
+	}
+	else {
+		sleepms(THINK_TIME); //thinks for think time/ 10
 	}
 }
 
