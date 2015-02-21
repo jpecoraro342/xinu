@@ -1,3 +1,15 @@
+
+/* LAB2 FUNCTIONS  - DEFINED IN MAIN.c */
+
+extern syscall sendMsg (pid32, umsg32);
+extern uint32 sendMsgs (pid32, umsg32*, uint32); 
+extern uint32 sendnMsg (uint32, pid32*, umsg32); 
+extern umsg32 receiveMsg (void);
+extern syscall receiveMsgs (umsg32*, uint32);
+
+/* END LAB2 FUNCTIONS */
+
+
 /* in file addargs.c */
 extern	status	addargs(pid32, int32, int32[], int32,char *, void *);
 
@@ -320,3 +332,5 @@ extern	void	xdone(void);
 
 /* in file yield.c */
 extern	syscall	yield(void);
+
+
