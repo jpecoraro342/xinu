@@ -3,8 +3,6 @@
 #include <xinu.h>
 #include <stdio.h>
 
-#include <user_functions.h>
-
 int main(int argc, char **argv)
 {
 	uint32 retval;
@@ -17,7 +15,7 @@ int main(int argc, char **argv)
 	while (TRUE) {
 		retval = receive();
 		kprintf("\n\n\rMain process recreating shell\n\n\r");
-		resume(create(shell, 4096, 1, "shell", 1, CONSOLE)); 
+		resume(create(shell, 4096, 1, "shell", 1, CONSOLE));
 	}
 	while (1);
 

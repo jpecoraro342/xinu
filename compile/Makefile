@@ -110,17 +110,6 @@ SHELL_CFULL  = ${SHELL_CFILES:%=../shell/%}
 
 SRC_FILES += $(SHELL_CFULL)
 
-#------------------------------------------------------------------------
-# Files for ../user_code
-#------------------------------------------------------------------------
-
-USER_CODE_CFILES =								\
-	user_functions.c
-
-USER_CODE_CFULL = ${USER_CODE_CFILES:%=../user_code/%}
-
-SRC_FILES += $(USER_CODE_CFULL)
-
 #######################################
 # Generate a list of all object files
 #######################################
