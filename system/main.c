@@ -3,23 +3,30 @@
 /*
 * Lab 2 Checklist
 *
+* √ works
+* X doesn't work
+* ? not tested
+* - works but will need to be retested after change
+*
 * sendMSg:
 * 	√ Send Msg to Non-Full Process Queue (Test Case 1)
+*	√ Sending Msg to bad pid returns SYSERR (Test Case 3)
 *	? Sending Msg to Full Process Queue returns SYSERR
-*	? Sending Msg to bad pid returns SYSERR
 *
 * receiveMsg:
 * 	√ Receives message when a message is queued (Test Case 1)
-*	X Waits to receive message when none are queued (Test Case 2)
+*	√ Waits to receive message when none are queued (Test Case 2)
 *
 * sendMsgs:
-* 	? Sends multiple messages to a single process
-*	? Returns number of messages sent
+* 	√ Sends multiple messages to a single process (Test Case 4)
+*	√ Returns number of messages sent (Test Case 4, )
 *	? Returns SYSERR on badpid
+*	? Returns SYSERR on no messages sent
 * 
 * receiveMsgs:
-* 	? Receives number of messages if queued
-*	? Waits for number of messages to be queued before receiving
+* 	√ Receives number of messages if queued (Test Case 4)
+*	√ Messages saved in array (Test Case 4)
+*	√ Waits for number of messages to be queued before receiving all at once (Test Case 5)
 *
 * sendnMsg:
 * 	√ Sends messages to all pids
@@ -32,7 +39,7 @@
 #include <xinu.h>
 #include <stdio.h>
 
-#define MSG_BUFFER_SIZE 20
+#define MSG_BUFFER_SIZE 11
 #define PROC_MSGS_LOC pid * MSG_BUFFER_SIZE 
 
 umsg32 message_queue[NPROC * MSG_BUFFER_SIZE]; /* The message queue for each process */
@@ -48,6 +55,7 @@ umsg32 dequeue_msg(pid32 pid);
 umsg32 peek_msg_queue(pid32 pid);
 int msg_queue_empty(pid32 pid);
 int msg_queue_full(pid32 pid);
+int curr_buffer_size(pid32 pid);
 
 /* Printing Functions */
 void print_send_msg(pid32 pid, umsg32 msg);
@@ -55,6 +63,7 @@ void print_receive_msg(umsg32 msg);
 
 /* Function for testing */
 void test();
+void empty(); //Creates process that does nothing
 
 int main(int argc, char **argv) {
 	print_mutex = semcreate(1);
@@ -74,6 +83,7 @@ int main(int argc, char **argv) {
 /* Testing Process */
 
 void test() {
+	int i;
 	
 	/* Test Case 1
 	 *
@@ -87,20 +97,20 @@ void test() {
 	 * 
 	 */
 
-	umsg32 msg1 = 1;
-	umsg32 msg2 = 2;
+	// umsg32 msg1 = 1;
+	// umsg32 msg2 = 2;
 	
-	// Receive Process
-	pid32 proc3 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
+	// // Receive Process
+	// pid32 proc3 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
 
-	// Send Processes
-	pid32 proc1 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg1);
-	pid32 proc2 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg2);
+	// // Send Processes
+	// pid32 proc1 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg1);
+	// pid32 proc2 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg2);
 
-	resume(proc1);
-	resume(proc2);
+	// resume(proc1);
+	// resume(proc2);
 
-	resume(proc3);
+	// resume(proc3);
 
 	/* End Test Case 1 */
 
@@ -115,7 +125,7 @@ void test() {
 	 * 
 	 */
 
-	umsg32 msg3 = 1;
+	umsg32 msg3 = 3;
 	
 	// Receive Process
 	pid32 proc5 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
@@ -128,30 +138,94 @@ void test() {
 
 	/* End Test Case 2 */
 
-	//umsg32 msg_list_1[5] = { 1, 2, 3, 4, 5 };
-	//umsg32 msg_list_1_rec[5];
+	/* Test Case 3
+	 *
+	 * proc4 sends msg3 to badpid
+	 *
+	 * Expected Output:
+	 * Bad PID
+	 * 
+	 */
 
-	/* receive 5 messages */
-	//pid32 proc1 = create(receiveMsgs, 4096, 50, "Receive 5 Messages", 2, &msg_list_1_rec, 5);
+	// umsg32 msg4 = 4;
+	
+	// // Send Processes
+	// pid32 proc6 = create(sendMsg, 4096, 50, "Send message to badpid", 2, 121, msg4);
 
-	/* proc6 will send msg_list_1 to proc1 */
-	//pid32 proc6 = create(sendMsgs, 4096, 50, "Send 5 to proc1", 3, proc1, &msg_list_1, 5);
+	// resume(proc6);
 
-	/*
-	//sender list processes
-	int i;
-	for (i = 0; i < 5; i++) {
-		sender_list[i] = create(receiveMsg, 4096, 50, "Receive", 0, 0);;
-	}
+	/* End Test Case 3 */
 
-	pid32 sender_list[5];
+	/* Test Case 4
+	 *
+	 * proc7 sends msgs 5 - 10 to proc8
+	 * proc8 receives msg at front of queue
+	 *
+	 * Expected Output:
+	 * "Sent Msg 5" ...
+	 * "Sent Msg 9"
+	 * "5 Messages Sent"
+	 * "Receive Msg 5" ...
+	 * "Receive Msg 9"
+	 * "Msg 5" ...
+	 * "Msg 9"
+	 *  
+	 */
 
-	pid32 proc11 = create(sendnMsg, 4096, 50, "Send 5 messages", 3, 5, &sender_list, msg22);
+	// umsg32 msg_list_1[5] = { 5, 6, 7, 8, 9 };
+	// umsg32 msg_list_1_rec[5];
 
-	for (i = 0; i < 5; i++) {
-		resume(sender_list[i]);
-	}
-	*/
+	// //Receives 5 messages
+	// pid32 proc8 = create(receiveMsgs, 4096, 50, "Receive 5 Messages", 2, &msg_list_1_rec, 5);
+
+	// 
+	// pid32 proc7 = create(sendMsgs, 4096, 50, "Send 5 to proc8", 3, proc8, &msg_list_1, 5);
+
+	// resume(proc7);
+	// resume(proc8);
+
+	// wait(print_mutex);
+	// for (i = 0; i < 5; i++) {
+	// 	kprintf("Msg %d\n", msg_list_1_rec[i]);
+	// }
+	// signal(print_mutex);
+
+	/* End Test Case 4 */
+
+	/* Test Case 5
+	 *
+	 * proc9, 10 sends msgs 10-14, 15-19 to proc10
+	 * proc10 will need to wait to receive all 10 messages
+	 *
+	 * Expected Output:
+	 * "Sent Msg 10" ...
+	 * "Sent Msg 14"
+	 * "5 Messages Sent"
+	 * "Sent Msg 15" ...
+	 * "Sent Msg 19"
+	 * "5 Messages Sent"
+	 * "Receive Msg 10" ...
+	 * "Receive Msg 19"
+	 *  
+	 */
+
+	// umsg32 msg_list_2[5] = { 10, 11, 12, 13, 14 };
+	// umsg32 msg_list_3[5] = { 15, 16, 17, 18, 19 };
+	// umsg32 msg_list_23_rec[10];
+
+	// //Receiving Process
+	// pid32 proc11 = create(receiveMsgs, 4096, 50, "Receive 10 Messages", 2, &msg_list_23_rec, 10);
+
+	// pid32 proc9 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_2, 5);
+	// pid32 proc10 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_3, 5);
+
+	// resume(proc11);
+	// resume(proc9);
+	// resume(proc10);
+
+	/* End Test Case 5 */
+
+
 }
 
 /* Message Passing Functions */
@@ -166,7 +240,7 @@ syscall sendMsg (pid32 pid, umsg32 msg) {
 
 	if (isbadpid(pid)) {
 		wait(print_mutex);
-		kprintf("Could not sent message to Process: %d - Bad PID\n", pid);
+		kprintf("Could not send message %d to Process: %d - Bad PID\n", msg, pid);
 		signal(print_mutex);
 
 		restore(mask);
@@ -176,7 +250,7 @@ syscall sendMsg (pid32 pid, umsg32 msg) {
 	//TODO: Change this if we need to be able to handle this
 	if (msg_queue_full(pid)) {
 		wait(print_mutex);
-		kprintf("Could not sent message to Process: %d - Message Queue Full\n", pid);
+		kprintf("Could not send message %d to Process: %d - Message Queue Full\n", msg, pid);
 		signal(print_mutex);
 
 		restore(mask);
@@ -190,6 +264,15 @@ syscall sendMsg (pid32 pid, umsg32 msg) {
 	kprintf("Process: %d successfully sent 1 message\n", currpid);
 	signal(print_mutex);
 
+	//Restore Process if Waiting
+	struct	procent *prptr = &proctab[pid];
+	if (prptr->prstate == PR_RECV) {
+		ready(pid, RESCHED_YES);
+	} else if (prptr->prstate == PR_RECTIM) {
+		unsleep(pid);
+		ready(pid, RESCHED_YES);
+	}
+
 	restore(mask);
 	return OK;
 }
@@ -200,16 +283,18 @@ syscall sendMsg (pid32 pid, umsg32 msg) {
 */
 umsg32 receiveMsg (void) {
 	umsg32 msg;
-	if (!msg_queue_empty(currpid)) {
-		msg = dequeue_msg(currpid); 
-	}
-	else {
-		//Reschedule? Wait? Do something?
 
+	if (msg_queue_empty(currpid)) {
 		wait(print_mutex);
-		kprintf("Could not receive message on process: %d - Message Queue Empty\n", currpid);
+		kprintf("No message to receive, Reschedule Process: %d\n", currpid);
 		signal(print_mutex);
+
+		struct	procent *prptr = &proctab[currpid];
+		prptr->prstate = PR_RECV;
+		resched();
 	}
+	
+	msg = dequeue_msg(currpid);
 
 	print_receive_msg(msg);
 	return msg;	
@@ -231,6 +316,15 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 		return SYSERR;
 	}
 
+	if (msg_count > MSG_BUFFER_SIZE) {
+		wait(print_mutex);
+		kprintf("Could not sent messages to Process: %d - Overflow Error\n", pid);
+		signal(print_mutex);
+
+		restore(mask);
+		return SYSERR;
+	}
+
 	uint32 successfull_messages = 0;
 	uint32 i;
 	for (i = 0; i < msg_count; i++) {
@@ -243,9 +337,27 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 		}
 	}
 
+	if (successfull_messages == 0) {
+		wait(print_mutex);
+		kprintf("Process: %d did not successfully send any messages\n", currpid);
+		signal(print_mutex);
+
+		restore(mask);
+		return SYSERR;
+	}
+
 	wait(print_mutex);
 	kprintf("Process: %d Successfully Sent %d Messages\n", currpid, successfull_messages);
 	signal(print_mutex);
+
+	//Restore Process if Waiting
+	struct	procent *prptr = &proctab[pid];
+	if (prptr->prstate == PR_RECV) {
+		ready(pid, RESCHED_YES);
+	} else if (prptr->prstate == PR_RECTIM) {
+		unsleep(pid);
+		ready(pid, RESCHED_YES);
+	}
 
 	restore(mask);
 	return i;
@@ -257,10 +369,40 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 * are then all together immediately received.
 */
 syscall receiveMsgs (umsg32* msgs, uint32 msg_count) {
-	//Currently it does not receive all at once
+	if (msg_count > MSG_BUFFER_SIZE) {
+		wait(print_mutex);
+		kprintf("Could not Receive Messages - Overflow Error\n");
+		signal(print_mutex);
+
+		return SYSERR;
+	}
+
+	//Wait until buffer has msg_count messages in it
+	while (curr_buffer_size(currpid) < msg_count) {
+		wait(print_mutex);
+		kprintf("Head: %d Tail: %d CURR_BUFFER_SIZE: %d\n", head[currpid], tail[currpid], curr_buffer_size(currpid));
+		signal(print_mutex);
+		wait(print_mutex);
+		kprintf("Not enough messages, rescheduling process: %d\n", currpid);
+		signal(print_mutex);
+
+		struct	procent *prptr = &proctab[currpid];
+		prptr->prstate = PR_RECV;
+		resched();
+	}
+
+	wait(print_mutex);
+	kprintf("Head: %d Tail: %d CURR_BUFFER_SIZE: %d\n", head[currpid], tail[currpid], curr_buffer_size(currpid));
+	signal(print_mutex);
+
 	int i;
 	for (i = 0; i < msg_count; i++) {
-		msgs[i] = receive();
+		//NOTE: If we have waited for all the messages to be in the queue 
+		//this if statement should be true every time
+		if (!msg_queue_empty(currpid)) {
+			msgs[i] = dequeue_msg(currpid); 
+			print_receive_msg(msgs[i]);
+		}
 	}
 
 	wait(print_mutex);
@@ -303,7 +445,7 @@ uint32 sendnMsg (uint32 pid_count, pid32* pids, umsg32 msg) {
 
 /* Checks to see if the message queue for pid is empty */
 int msg_queue_empty(pid32 pid) {
-	if (head[pid] == (tail[pid] - 1) % MSG_BUFFER_SIZE) {
+	if ((head[pid] + 1) % MSG_BUFFER_SIZE == tail[pid]) {
 		return TRUE;
 	}
 	else {
@@ -356,7 +498,19 @@ umsg32 dequeue_msg(pid32 pid) {
 	return msg;
 }
 
+int curr_buffer_size(pid32 pid) {
+	if (head[pid] == tail[pid]) {
+		return MSG_BUFFER_SIZE - 1;
+	}
+	return (MSG_BUFFER_SIZE-head[pid]+tail[pid] - 1) % (MSG_BUFFER_SIZE - 1);
+}
+
 /* Printing/Debugging */
+
+/* Creates an empty process to be used as a dummy (for testing) */
+void empty() {
+	while(1);
+}
 
 /* Prints: Sent Message: %d to PID: %d */
 void print_send_msg(pid32 pid, umsg32 msg) {
