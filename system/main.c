@@ -1,17 +1,22 @@
 /*  main.c  - main */
 
 /*
+* Joseph Pecoraro
+* Lab 2
+*
+*/
+
+/*
 * Lab 2 Checklist
 *
 * √ works
 * X doesn't work
 * ? not tested
-* - works but will need to be retested after change
 *
 * sendMSg:
 * 	√ Send Msg to Non-Full Process Queue (Test Case 1)
 *	√ Sending Msg to bad pid returns SYSERR (Test Case 3)
-*	? Sending Msg to Full Process Queue returns SYSERR
+*	√ Sending Msg to Full Process Queue returns SYSERR (Test Case 6)
 *
 * receiveMsg:
 * 	√ Receives message when a message is queued (Test Case 1)
@@ -20,8 +25,8 @@
 * sendMsgs:
 * 	√ Sends multiple messages to a single process (Test Case 4)
 *	√ Returns number of messages sent (Test Case 4, )
-*	? Returns SYSERR on badpid
-*	? Returns SYSERR on no messages sent
+*	√ Returns SYSERR on badpid (Test Case 7)
+*	√ Returns SYSERR on no messages sent (Test Case 6)
 * 
 * receiveMsgs:
 * 	√ Receives number of messages if queued (Test Case 4)
@@ -29,10 +34,9 @@
 *	√ Waits for number of messages to be queued before receiving all at once (Test Case 5)
 *
 * sendnMsg:
-* 	√ Sends messages to all pids
-*	? Returns number successfully sent
-*	? Returns SYSERR on badpid
-*	? Does not send any messages if badpid encoutnered
+* 	√ Sends messages to all pids (Test Case 8)
+*	√ Returns number successfully sent (Test Case 9)
+*	√ Returns SYSERR on 0 successfull messages (bad pid or full) (Test Case 10)
 *
 */
 
@@ -78,154 +82,6 @@ int main(int argc, char **argv) {
 
 	while (1);
 	return OK;
-}
-
-/* Testing Process */
-
-void test() {
-	int i;
-	
-	/* Test Case 1
-	 *
-	 * proc1 and proc2 send msg 1 and 2 to proc3
-	 * proc3 receives msg at front of queue
-	 *
-	 * Expected Output:
-	 * "Sent Msg 1"
-	 * "Sent Msg 2"
-	 * "Receive Msg 1"
-	 * 
-	 */
-
-	// umsg32 msg1 = 1;
-	// umsg32 msg2 = 2;
-	
-	// // Receive Process
-	// pid32 proc3 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
-
-	// // Send Processes
-	// pid32 proc1 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg1);
-	// pid32 proc2 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg2);
-
-	// resume(proc1);
-	// resume(proc2);
-
-	// resume(proc3);
-
-	/* End Test Case 1 */
-
-	/* Test Case 2
-	 *
-	 * proc4 sends msg3 to proc5
-	 * proc5 waits to receive message until sent by proc4
-	 *
-	 * Expected Output:
-	 * "Sent Msg 3"
-	 * "Receive Msg 3"
-	 * 
-	 */
-
-	umsg32 msg3 = 3;
-	
-	// Receive Process
-	pid32 proc5 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
-
-	// Send Processes
-	pid32 proc4 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc5, msg3);
-
-	resume(proc5);
-	resume(proc4);
-
-	/* End Test Case 2 */
-
-	/* Test Case 3
-	 *
-	 * proc4 sends msg3 to badpid
-	 *
-	 * Expected Output:
-	 * Bad PID
-	 * 
-	 */
-
-	// umsg32 msg4 = 4;
-	
-	// // Send Processes
-	// pid32 proc6 = create(sendMsg, 4096, 50, "Send message to badpid", 2, 121, msg4);
-
-	// resume(proc6);
-
-	/* End Test Case 3 */
-
-	/* Test Case 4
-	 *
-	 * proc7 sends msgs 5 - 10 to proc8
-	 * proc8 receives msg at front of queue
-	 *
-	 * Expected Output:
-	 * "Sent Msg 5" ...
-	 * "Sent Msg 9"
-	 * "5 Messages Sent"
-	 * "Receive Msg 5" ...
-	 * "Receive Msg 9"
-	 * "Msg 5" ...
-	 * "Msg 9"
-	 *  
-	 */
-
-	// umsg32 msg_list_1[5] = { 5, 6, 7, 8, 9 };
-	// umsg32 msg_list_1_rec[5];
-
-	// //Receives 5 messages
-	// pid32 proc8 = create(receiveMsgs, 4096, 50, "Receive 5 Messages", 2, &msg_list_1_rec, 5);
-
-	// 
-	// pid32 proc7 = create(sendMsgs, 4096, 50, "Send 5 to proc8", 3, proc8, &msg_list_1, 5);
-
-	// resume(proc7);
-	// resume(proc8);
-
-	// wait(print_mutex);
-	// for (i = 0; i < 5; i++) {
-	// 	kprintf("Msg %d\n", msg_list_1_rec[i]);
-	// }
-	// signal(print_mutex);
-
-	/* End Test Case 4 */
-
-	/* Test Case 5
-	 *
-	 * proc9, 10 sends msgs 10-14, 15-19 to proc10
-	 * proc10 will need to wait to receive all 10 messages
-	 *
-	 * Expected Output:
-	 * "Sent Msg 10" ...
-	 * "Sent Msg 14"
-	 * "5 Messages Sent"
-	 * "Sent Msg 15" ...
-	 * "Sent Msg 19"
-	 * "5 Messages Sent"
-	 * "Receive Msg 10" ...
-	 * "Receive Msg 19"
-	 *  
-	 */
-
-	// umsg32 msg_list_2[5] = { 10, 11, 12, 13, 14 };
-	// umsg32 msg_list_3[5] = { 15, 16, 17, 18, 19 };
-	// umsg32 msg_list_23_rec[10];
-
-	// //Receiving Process
-	// pid32 proc11 = create(receiveMsgs, 4096, 50, "Receive 10 Messages", 2, &msg_list_23_rec, 10);
-
-	// pid32 proc9 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_2, 5);
-	// pid32 proc10 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_3, 5);
-
-	// resume(proc11);
-	// resume(proc9);
-	// resume(proc10);
-
-	/* End Test Case 5 */
-
-
 }
 
 /* Message Passing Functions */
@@ -309,7 +165,7 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 
 	if(isbadpid(pid)) {
 		wait(print_mutex);
-		kprintf("Could not sent messages to Process: %d - Bad PID\n", pid);
+		kprintf("Could not send messages to Process: %d - Bad PID\n", pid);
 		signal(print_mutex);
 
 		restore(mask);
@@ -318,7 +174,7 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 
 	if (msg_count > MSG_BUFFER_SIZE) {
 		wait(print_mutex);
-		kprintf("Could not sent messages to Process: %d - Overflow Error\n", pid);
+		kprintf("Could not send messages to Process: %d - Overflow Error\n", pid);
 		signal(print_mutex);
 
 		restore(mask);
@@ -339,7 +195,7 @@ uint32 sendMsgs (pid32 pid, umsg32* msgs, uint32 msg_count) {
 
 	if (successfull_messages == 0) {
 		wait(print_mutex);
-		kprintf("Process: %d did not successfully send any messages\n", currpid);
+		kprintf("Could not send messages to Process: %d -  Message Queue Full\n", pid);
 		signal(print_mutex);
 
 		restore(mask);
@@ -419,6 +275,15 @@ syscall receiveMsgs (umsg32* msgs, uint32 msg_count) {
 uint32 sendnMsg (uint32 pid_count, pid32* pids, umsg32 msg) {
 	intmask	mask = disable();
 
+	if (pid_count > 3) {
+		wait(print_mutex);
+		kprintf("Could not send message %d to multiple processes -  Overflow error (too many processes)\n", msg);
+		signal(print_mutex);
+
+		restore(mask);
+		return SYSERR;
+	}
+
 	uint32 successfull_messages = 0;
 	uint32 i;
 	for (i = 0; i < pid_count; i++) {
@@ -431,6 +296,15 @@ uint32 sendnMsg (uint32 pid_count, pid32* pids, umsg32 msg) {
 			print_send_msg(pid, msg);
 			successfull_messages++;
 		}
+	}
+
+	if (successfull_messages == 0) {
+		wait(print_mutex);
+		kprintf("Could not send message %d to multiple processes -  badpid or full message queue\n", msg);
+		signal(print_mutex);
+
+		restore(mask);
+		return SYSERR;
 	}
 
 	wait(print_mutex);
@@ -524,4 +398,205 @@ void print_receive_msg(umsg32 msg) {
 	wait(print_mutex);
 	kprintf("Current Process: %d Received Message: %d\n", currpid, msg);
 	signal(print_mutex);
+}
+
+/* Testing Process */
+
+void test() {
+	int i;
+	
+	/* Test Case 1
+	 *
+	 * proc1 and proc2 send msg 1 and 2 to proc3
+	 * proc3 receives msg at front of queue
+	 *
+	 * Expected Output:
+	 * "Sent Msg 1"
+	 * "Sent Msg 2"
+	 * "Receive Msg 1"
+	 * 
+	 */
+
+	// umsg32 msg1 = 1;
+	// umsg32 msg2 = 2;
+	
+	// // Receive Process
+	// pid32 proc3 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
+
+	// // Send Processes
+	// pid32 proc1 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg1);
+	// pid32 proc2 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc3, msg2);
+
+	// resume(proc1);
+	// resume(proc2);
+
+	// resume(proc3);
+
+	/* End Test Case 1 */
+
+	/* Test Case 2
+	 *
+	 * proc4 sends msg3 to proc5
+	 * proc5 waits to receive message until sent by proc4
+	 *
+	 * Expected Output:
+	 * "Sent Msg 3"
+	 * "Receive Msg 3"
+	 * 
+	 */
+
+	// umsg32 msg3 = 3;
+	
+	// // Receive Process
+	// pid32 proc5 = create(receiveMsg, 4096, 50, "Receive", 0, 0);
+
+	// // Send Processes
+	// pid32 proc4 = create(sendMsg, 4096, 50, "Send message to proc3", 2, proc5, msg3);
+
+	// resume(proc5);
+	// resume(proc4);
+
+	/* End Test Case 2 */
+
+	/* Test Case 3
+	 *
+	 * proc4 sends msg3 to badpid
+	 *
+	 * Expected Output:
+	 * Bad PID
+	 * 
+	 */
+
+	// umsg32 msg4 = 4;
+	
+	// // Send Processes
+	// pid32 proc6 = create(sendMsg, 4096, 50, "Send message to badpid", 2, 121, msg4);
+
+	// resume(proc6);
+
+	/* End Test Case 3 */
+
+	/* Test Case 4
+	 *
+	 * proc7 sends msgs 5 - 10 to proc8
+	 * proc8 receives msg at front of queue
+	 *
+	 * Expected Output:
+	 * "Sent Msg 5" ...
+	 * "Sent Msg 9"
+	 * "5 Messages Sent"
+	 * "Receive Msg 5" ...
+	 * "Receive Msg 9"
+	 * "Msg 5" ...
+	 * "Msg 9"
+	 *  
+	 */
+
+	// umsg32 msg_list_1[5] = { 5, 6, 7, 8, 9 };
+	// umsg32 msg_list_1_rec[5];
+
+	// //Receives 5 messages
+	// pid32 proc8 = create(receiveMsgs, 4096, 50, "Receive 5 Messages", 2, &msg_list_1_rec, 5);
+
+	// 
+	// pid32 proc7 = create(sendMsgs, 4096, 50, "Send 5 to proc8", 3, proc8, &msg_list_1, 5);
+
+	// resume(proc7);
+	// resume(proc8);
+
+	// wait(print_mutex);
+	// for (i = 0; i < 5; i++) {
+	// 	kprintf("Msg %d\n", msg_list_1_rec[i]);
+	// }
+	// signal(print_mutex);
+
+	/* End Test Case 4 */
+
+	/* Test Case 5
+	 *
+	 * proc9, 10 sends msgs 10-14, 15-19 to proc10
+	 * proc10 will need to wait to receive all 10 messages
+	 *
+	 * Expected Output:
+	 * "Sent Msg 10" ...
+	 * "Sent Msg 14"
+	 * "5 Messages Sent"
+	 * "Sent Msg 15" ...
+	 * "Sent Msg 19"
+	 * "5 Messages Sent"
+	 * "Receive Msg 10" ...
+	 * "Receive Msg 19"
+	 *  
+	 */
+
+	// umsg32 msg_list_2[5] = { 10, 11, 12, 13, 14 };
+	// umsg32 msg_list_3[5] = { 15, 16, 17, 18, 19 };
+	// umsg32 msg_list_23_rec[10];
+
+	// //Receiving Process
+	// pid32 proc11 = create(receiveMsgs, 4096, 50, "Receive 10 Messages", 2, &msg_list_23_rec, 10);
+
+	// pid32 proc9 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_2, 5);
+	// pid32 proc10 = create(sendMsgs, 4096, 50, "Send 5 to proc11", 3, proc11, &msg_list_3, 5);
+
+	// resume(proc11);
+	// resume(proc9);
+	// resume(proc10);
+
+	/* End Test Case 5 */
+
+	 /* Test Case 6
+	 *
+	 * proc9, 10 sends msgs 10-14, 15-19 to proc10
+	 * proc10 will need to wait to receive all 10 messages
+	 *
+	 * Expected Output:
+	 * "Sent Msg 20" ...
+	 * "Sent Msg 29"
+	 * "Could Not Send"
+	 * "Could Not Send"
+	 *  
+	 */
+
+	// umsg32 msg_list_4[10] = { 20, 21, 22, 23, 24, 25, 26, 27, 28, 29 };
+	// umsg32 msg_list_5[5] = { 30, 31, 32, 33, 34 };
+	// umsg32 msg35 = 35; 
+
+	// //Receiving Process - Empty (We don't need to actually do anything with this process)
+	// pid32 proc12 = create(empty, 4096, 50, "Empty Process", 0, 0);
+
+	// pid32 proc13 = create(sendMsgs, 4096, 50, "Send 10 (Fill) to proc12", 3, proc12, &msg_list_4, 10);
+	// pid32 proc14 = create(sendMsgs, 4096, 50, "Send 5 to proc12", 3, proc12, &msg_list_5, 5);
+	// pid32 proc15 = create(sendMsg, 4096, 50, "Send message to proc12", 2, proc12, msg35);
+
+	// resume(proc13);
+	// resume(proc14);
+	// resume(proc15);
+
+	/* End Test Case 6 */
+
+	 /* Test Case 7
+	 *
+	 *
+	 * Expected Output:
+	 *  
+	 */
+
+	// umsg32 msg36 = 36; 
+	// pid32 sender_list[3];
+
+	// pid32 proc16 = create(sendnMsg, 4096, 50, "Send 3 messages", 3, 3, &sender_list, msg36);
+
+	// for (i = 0; i < 3; i++) {
+	// 	sender_list[i] = create(receiveMsg, 4096, 50, "Receive", 0, 0);;
+	// }
+
+	// resume(proc16);
+
+	// for (i = 0; i < 5; i++) {
+	// 	resume(sender_list[i]);
+	// }
+
+	/* End Test Case 7 */
+
 }
